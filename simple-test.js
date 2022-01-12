@@ -1,7 +1,10 @@
-const { getDeviceList } = require('./index')
+const { find } = require('.')
 
 async function main() {
-  const res = await getDeviceList()
+  const res = await find({
+    pid: 1558,
+    vid: 1507
+  })
   console.log(res)
 }
 

@@ -3,9 +3,9 @@
 #[macro_use]
 extern crate napi_derive;
 use core::result;
-use napi::{CallContext, Env, JsNumber, JsObject, Result, Task};
-use rusb::{self, Error};
-use std::convert::TryInto;
+use napi::{CallContext, Env, JsObject, Result, Task};
+use rusb;
+use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
 #[derive(Debug)]
@@ -18,7 +18,7 @@ struct Device {
     device_address: u8,
 }
 
-fn get_device_list() -> result::Result<Vec<Device>, Error> {
+fn get_device_list() -> result::Result<Vec<Device>, rusb::Error> {
     let mut list: Vec<Device> = vec![];
 
     for device in rusb::devices().unwrap().iter() {
@@ -48,67 +48,87 @@ fn get_device_list() -> result::Result<Vec<Device>, Error> {
     Ok(list)
 }
 
-struct AsyncTask();
+#[derive(Serialize, Debug, Deserialize)]
+struct FindByIdAsyncTaskParams {
+    pid: Option<i32>,
+    vid: Option<i32>,
+}
 
-impl Task for AsyncTask {
+struct FindAsyncTask(Option<FindByIdAsyncTaskParams>);
+
+impl Task for FindAsyncTask {
     type Output = Vec<Device>;
     type JsValue = JsObject;
 
     fn compute(&mut self) -> Result<Self::Output> {
-        let list = get_device_list().unwrap();
+        let mut list = get_device_list().unwrap();
+        let params = &self.0;
+        if let Some(params) = params {
+            if let Some(pid) = params.pid {
+                list = list
+                    .into_iter()
+                    .filter(|device| device.product_id == pid as u16)
+                    .collect::<Vec<_>>();
+            }
+            if let Some(vid) = params.vid {
+                list = list
+                    .into_iter()
+                    .filter(|device| device.vendor_id == vid as u16)
+                    .collect::<Vec<_>>();
+            }
+        }
         Ok(list)
     }
 
     fn resolve(self, env: Env, output: Self::Output) -> Result<Self::JsValue> {
-        let mut arr = env.create_array()?;
-        for (index, device) in output.into_iter().enumerate() {
-            let mut o = env.create_object()?;
-            o.set_property(
-                env.create_string("vendorId")?,
-                env.create_int32(device.vendor_id as i32)?,
-            )?;
-            o.set_property(
-                env.create_string("productId")?,
-                env.create_int32(device.product_id as i32)?,
-            )?;
-            o.set_property(
-                env.create_string("deviceName")?,
-                env.create_string(&device.device_name)?,
-            )?;
-            o.set_property(
-                env.create_string("manufacturer")?,
-                env.create_string(&device.manufacturer)?,
-            )?;
-            o.set_property(
-                env.create_string("serialNumber")?,
-                env.create_string(&device.serial_number)?,
-            )?;
-            o.set_property(
-                env.create_string("deviceAddress")?,
-                env.create_int32(device.device_address as i32)?,
-            )?;
-            arr.set_element(index as u32, o)?;
-        }
-        Ok(arr)
+        convert_to_js(&env, &output)
     }
+}
+
+fn convert_to_js(env: &Env, devices: &Vec<Device>) -> Result<JsObject> {
+    let mut arr = env.create_array()?;
+    for (index, device) in devices.into_iter().enumerate() {
+        let mut o = env.create_object()?;
+        o.set_property(
+            env.create_string("vendorId")?,
+            env.create_int32(device.vendor_id as i32)?,
+        )?;
+        o.set_property(
+            env.create_string("productId")?,
+            env.create_int32(device.product_id as i32)?,
+        )?;
+        o.set_property(
+            env.create_string("deviceName")?,
+            env.create_string(&device.device_name)?,
+        )?;
+        o.set_property(
+            env.create_string("manufacturer")?,
+            env.create_string(&device.manufacturer)?,
+        )?;
+        o.set_property(
+            env.create_string("serialNumber")?,
+            env.create_string(&device.serial_number)?,
+        )?;
+        o.set_property(
+            env.create_string("deviceAddress")?,
+            env.create_int32(device.device_address as i32)?,
+        )?;
+        arr.set_element(index as u32, o)?;
+    }
+    Ok(arr)
 }
 
 #[module_exports]
 fn init(mut exports: JsObject) -> Result<()> {
-    exports.create_named_method("getDeviceList", get_device_list_fn)?;
+    exports.create_named_method("find", find_fn)?;
     Ok(())
 }
 
 #[js_function(1)]
-fn sync_fn(ctx: CallContext) -> Result<JsNumber> {
-    let argument: u32 = ctx.get::<JsNumber>(0)?.try_into()?;
-
-    ctx.env.create_uint32(argument + 100)
-}
-
-#[js_function(1)]
-fn get_device_list_fn(ctx: CallContext) -> Result<JsObject> {
-    let task = AsyncTask();
+fn find_fn(ctx: CallContext) -> Result<JsObject> {
+    let arg0 = ctx.get::<JsObject>(0)?;
+    let params: Option<FindByIdAsyncTaskParams> = ctx.env.from_js_value(arg0)?;
+    let task = FindAsyncTask(params);
     let async_task = ctx.env.spawn(task)?;
     Ok(async_task.promise_object())
 }
