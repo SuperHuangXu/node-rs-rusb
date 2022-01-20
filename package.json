@@ -1,8 +1,8 @@
 {
   "name": "@bubblex/rusb",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "napi": {
-    "name": "rusb",
+    "name": "@bubblex/rusb",
     "triples": {
       "defaults": false,
       "additional": [
