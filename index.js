@@ -8,4 +8,38 @@ const { loadBinding } = require('@node-rs/helper')
  * `loadBinding` helper will load `rusb.[PLATFORM].node` from `__dirname` first
  * If failed to load addon, it will fallback to load from `rusb-[PLATFORM]`
  */
-module.exports = loadBinding(__dirname, 'rusb', 'rusb')
+// module.exports = loadBinding(__dirname, 'rusb', 'rusb')
+const lib = loadBinding(__dirname, 'rusb', 'rusb')
+const mitt = require('mitt')
+
+const emitter = mitt()
+
+emitter.find = lib.find
+emitter.startMonitoring = function () {
+  lib.startMonitoring(function (err, msg) {
+    if (err) {
+      throw err
+    }
+    const device = msg.device
+    if (msg.action === 'arrived') {
+      emitter.emit('add:' + device.vendorId + ':' + device.productId, device)
+      emitter.emit('add:' + device.vendorId, device)
+      emitter.emit('add', device)
+
+      emitter.emit('change:' + device.vendorId + ':' + device.productId, device)
+      emitter.emit('change:' + device.vendorId, device)
+      emitter.emit('change', device)
+    } else if (msg.action === 'left') {
+      emitter.emit('remove:' + device.vendorId + ':' + device.productId, device)
+      emitter.emit('remove:' + device.vendorId, device)
+      emitter.emit('remove', device)
+
+      emitter.emit('change:' + device.vendorId + ':' + device.productId, device)
+      emitter.emit('change:' + device.vendorId, device)
+      emitter.emit('change', device)
+    }
+  })
+}
+emitter.stopMonitoring = lib.stopMonitoring
+
+module.exports = emitter

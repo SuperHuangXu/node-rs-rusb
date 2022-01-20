@@ -16,19 +16,30 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@node-rs/helper": "^1.2.1"
+    "@node-rs/helper": "^1.2.1",
+    "mitt": "^3.0.0"
   },
   "devDependencies": {
-    "@napi-rs/cli": "^1.2.1"
+    "@napi-rs/cli": "^1.2.1",
+    "prettier": "^2.5.1"
   },
   "engines": {
     "node": ">= 10"
   },
   "scripts": {
+    "dev": "npm run build:debug && node example.js",
     "artifacts": "napi artifacts",
     "build": "napi build --platform --release",
     "build:debug": "napi build --platform",
     "prepublishOnly": "napi prepublish -t npm",
     "version": "napi version"
+  },
+  "prettier": {
+    "printWidth": 120,
+    "semi": false,
+    "trailingComma": "all",
+    "singleQuote": true,
+    "arrowParens": "always",
+    "parser": "typescript"
   }
 }
