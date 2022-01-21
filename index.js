@@ -1,5 +1,3 @@
-const { loadBinding } = require('@node-rs/helper')
-
 /**
  * __dirname means load native addon from current dir
  * 'rusb' is the name of native addon
@@ -8,8 +6,7 @@ const { loadBinding } = require('@node-rs/helper')
  * `loadBinding` helper will load `rusb.[PLATFORM].node` from `__dirname` first
  * If failed to load addon, it will fallback to load from `rusb-[PLATFORM]`
  */
-// module.exports = loadBinding(__dirname, 'rusb', 'rusb')
-const lib = loadBinding(__dirname, 'rusb', 'rusb')
+const lib = require('./loader.js')
 const mitt = require('mitt')
 
 const emitter = mitt()

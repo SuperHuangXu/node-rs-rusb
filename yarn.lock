@@ -9,18 +9,6 @@
   dependencies:
     inquirer "^8.1.3"
 
-"@napi-rs/triples@^1.0.3":
-  version "1.0.3"
-  resolved "https://registry.nlark.com/@napi-rs/triples/download/@napi-rs/triples-1.0.3.tgz?cache=0&sync_timestamp=1626933270684&other_urls=https%3A%2F%2Fregistry.nlark.com%2F%40napi-rs%2Ftriples%2Fdownload%2F%40napi-rs%2Ftriples-1.0.3.tgz#76d6d0c3f4d16013c61e45dfca5ff1e6c31ae53c"
-  integrity sha1-dtbQw/TRYBPGHkXfyl/x5sMa5Tw=
-
-"@node-rs/helper@^1.2.1":
-  version "1.2.1"
-  resolved "https://registry.nlark.com/@node-rs/helper/download/@node-rs/helper-1.2.1.tgz?cache=0&sync_timestamp=1626937530496&other_urls=https%3A%2F%2Fregistry.nlark.com%2F%40node-rs%2Fhelper%2Fdownload%2F%40node-rs%2Fhelper-1.2.1.tgz#e079b05f21ff4329d82c4e1f71c0290e4ecdc70c"
-  integrity sha1-4HmwXyH/QynYLE4fccApDk7Nxww=
-  dependencies:
-    "@napi-rs/triples" "^1.0.3"
-
 ansi-escapes@^4.2.1:
   version "4.3.2"
   resolved "https://registry.nlark.com/ansi-escapes/download/ansi-escapes-4.3.2.tgz?cache=0&sync_timestamp=1618847144938&other_urls=https%3A%2F%2Fregistry.nlark.com%2Fansi-escapes%2Fdownload%2Fansi-escapes-4.3.2.tgz#6b2291d1db7d98b6521d5f1efa42d0f3a9feb65e"
